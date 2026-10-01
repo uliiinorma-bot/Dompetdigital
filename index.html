@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DompetKu - Pencatat Keuangan Lokal</title>
+    <style>
+        :root {
+            --primary: #2ecc71;
+            --danger: #e74c3c;
+            --dark: #2c3e50;
+            --light: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #eef2f3;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            box-sizing: border-box;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--dark);
+            margin-top: 0;
+            font-size: 28px;
+        }
+
+        /* Tampilan Rekap Saldo Utama */
+        .rekap-saldo {
+            background: var(--dark);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .rekap-saldo h3 { margin: 0; font-weight: normal; opacity: 0.8; }
+        .rekap-saldo h2 { margin: 5px 0 0 0; font-size: 32px; }
+
+        /* Grid box untuk Pemasukan & Pengeluaran */
+        .grid-info {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .box-info {
+            flex: 1;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .box-masuk { background-color: var(--primary); }
+        .box-keluar { background-color: var(--danger); }
+
+        /* Formulir Penginputan Data */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+            color: var(--dark);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--dark);
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--dark);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover { opacity: 0.9; }
+
+        /* Tabel Riwayat Transaksi */
+        h2.section-title {
+            font-size: 20px;
+            color: var(--dark);
+            margin-top: 25px;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th { background-color: #f1f2f6; color: var(--dark); }
+
+        .txt-masuk { color: var(--primary); font-weight: bold; }
+        .txt-keluar { color: var(--danger); font-weight: bold; }
+
+        .btn-hapus {
+            background-color: var(--danger);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            width: auto;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>DOMPETKU 💰</h1>
+        
+        <!-- Papan Informasi Dana -->
+        <div class="rekap-saldo">
+            <h3>Total Saldo Anda</h3>
+            <h2 id="totalSaldo">Rp 0</h2>
+        </div>
+
+        <div class="grid-info">
+            <div class="box-info box-masuk">
+                <div>Pemasukan</div>
+                <div id="totalMasuk">Rp 0</div>
+            </div>
+            <div class="box-info box-keluar">
+                <div>Pengeluaran</div>
+                <div id="totalKeluar">Rp 0</div>
+            </div>
+        </div>
+
+        <!-- Formulir Transaksi -->
+        <div class="form-group">
+            <label for="deskripsi">Nama Transaksi / Keterangan:</label>
+            <input type="text" id="deskripsi" placeholder="Contoh: Uang Jajan, Beli Buku">
+        </div>
+        
+        <div class="form-group">
+            <label for="jumlah">Jumlah Uang (Rp):</label>
+            <input type="number" id="jumlah" placeholder="Contoh: 50000">
+        </div>
+
+        <div class="form-group">
+            <label for="jenis">Jenis Transaksi:</label>
+            <select id="jenis">
+                <option value="masuk">Pemasukan (+)</option>
+                <option value="keluar">Pengeluaran (-)</option>
+            </select>
+        </div>
+
+        <button onclick="tambahTransaksi()">Catat Transaksi</button>
+
+        <!-- Tabel Riwayat -->
+        <h2 class="section-title">Riwayat Transaksi Harian</h2>
+        <table id="tabelTransaksi">
+            <thead>
+                <tr>
+                    <th>Keterangan</th>
+                    <th>Jumlah</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="isiTabel">
+                <!-- Data transaksi akan dimunculkan di sini oleh JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Mengambil data lama dari LocalStorage browser saat web dibuka (jika ada)
+        let daftarTransaksi = JSON.parse(localStorage.getItem("transaksi_dompetku")) || [];
+
+        // Fungsi memformat angka biasa menjadi format Rupiah (Rp 50.000)
+        function formatRupiah(angka) {
+            return "Rp " + angka.toLocaleString('id-ID');
+        }
+
+        // Fungsi menghitung total keuangan dan memperbarui tabel visual
+        function perbaruiTampilan() {
+            const isiTabel = document.getElementById("isiTabel");
+            isiTabel.innerHTML = ""; // Bersihkan tabel lama
+
+            let totalMasuk = 0;
+            let totalKeluar = 0;
+
+            daftarTransaksi.forEach((item, indeks) => {
+                if (item.jenis === "masuk") {
+                    totalMasuk += item.jumlah;
+                } else {
+                    totalKeluar += item.jumlah;
+                }
+
+                // Render baris tabel baru
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${item.deskripsi}</td>
+                    <td class="${item.jenis === 'masuk' ? 'txt-masuk' : 'txt-keluar'}">
+                        ${item.jenis === 'masuk' ? '+' : '-'} ${formatRupiah(item.jumlah)}
+                    </td>
+                    <td><button class="btn-hapus" onclick="hapusTransaksi(${indeks})">Hapus</button></td>
+                `;
+                isiTabel.appendChild(tr);
+            });
+
+            let totalSaldo = totalMasuk - totalKeluar;
+
+            // Update angka rekap box di bagian atas aplikasi
+            document.getElementById("totalSaldo").innerText = formatRupiah(totalSaldo);
+            document.getElementById("totalMasuk").innerText = formatRupiah(totalMasuk);
+            document.getElementById("totalKeluar").innerText = formatRupiah(totalKeluar);
+
+            // Simpan data terbaru ke dalam LocalStorage browser secara permanen
+            localStorage.setItem("transaksi_dompetku", JSON.stringify(daftarTransaksi));
+        }
+
+        // Fungsi menambah data transaksi baru
+        function tambahTransaksi() {
+            const deskripsi = document.getElementById("deskripsi").value;
+            const jumlah = parseFloat(document.getElementById("jumlah").value);
+            const jenis = document.getElementById("jenis").value;
+
+            // Validasi pengecekan input kosong
+            if (deskripsi.trim() === "" || isNaN(jumlah) || jumlah <= 0) {
+                alert("Tolong isi nama transaksi dan jumlah uang dengan benar!");
+                return;
+            }
+
+            // Masukkan objek data baru ke dalam array
+            daftarTransaksi.push({
+                deskripsi: deskripsi,
+                jumlah: jumlah,
+                jenis: jenis
+            });
+
+            // Kosongkan kembali kolom input formulir
+            document.getElementById("deskripsi").value = "";
+            document.getElementById("jumlah").value = "";
+
+            perbaruiTampilan();
+        }
+
+        // Fungsi menghapus salah satu riwayat transaksi
+        function hapusTransaksi(indeks) {
+            if (confirm("Apakah Anda yakin ingin menghapus catatan transaksi ini?")) {
+                daftarTransaksi.splice(indeks, 1);
+                perbaruiTampilan();
+            }
+        }
+
+        // Jalankan fungsi hitung perdana saat aplikasi web pertama kali dibuka
+        perbaruiTampilan();
+    </script>
+
+</body>
+</html>
